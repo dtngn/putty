@@ -261,6 +261,12 @@ with the date and time when the log file is opened. It may be useful to
 disable this if the log file is being used as realtime input to other
 programs that don't expect the header line.
 
+\S{config-loglinetstamp} \I{log file, linetstamp}\q{Include line timestamp}
+
+This option allows you to choose whether to include a timestamp prefix
+for each log line. Note that this timestamp is the time writing the line
+to the log file.
+
 \S{config-logssh} Options specific to \i{SSH packet log}ging
 
 These options only apply if SSH packet data is being logged.

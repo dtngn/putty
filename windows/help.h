@@ -23,6 +23,7 @@ typedef const char *HelpCtx;
 #define WINHELP_CTX_logging_exists "config-logfileexists"
 #define WINHELP_CTX_logging_flush "config-logflush"
 #define WINHELP_CTX_logging_header "config-logheader"
+#define WINHELP_CTX_logging_linetstamp "config-loglinetstamp"
 #define WINHELP_CTX_logging_ssh_omit_password "config-logssh"
 #define WINHELP_CTX_logging_ssh_omit_data "config-logssh"
 #define WINHELP_CTX_keyboard_backspace "config-backspace"

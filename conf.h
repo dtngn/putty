@@ -858,6 +858,11 @@ CONF_OPTION(logheader,
     DEFAULT_BOOL(true),
     SAVE_KEYWORD("LogHeader"),
 )
+CONF_OPTION(loglinetstamp,
+    VALUE_TYPE(BOOL),
+    DEFAULT_BOOL(false),
+    SAVE_KEYWORD("LogLineTstamp"),
+)
 CONF_OPTION(logomitpass,
     VALUE_TYPE(BOOL),
     DEFAULT_BOOL(true),

@@ -32,7 +32,7 @@ static Filename *xlatlognam(const Filename *s,
  * isn't open, buffering data if it's in the process of being
  * opened asynchronously, etc.
  */
-static void logwrite(LogContext *ctx, ptrlen data)
+static void _logwrite(LogContext *ctx, ptrlen data)
 {
     /*
      * In state L_CLOSED, we call logfopen, which will set the state
@@ -53,6 +53,86 @@ static void logwrite(LogContext *ctx, ptrlen data)
                         "due to error while writing");
         }
     }                                  /* else L_ERROR, so ignore the write */
+}
+
+#ifdef _WINDOWS
+static void log_timestamp(LogContext *ctx)
+{
+    char buf[] = "[0000-00-00 00:00:00.000]";
+    SYSTEMTIME t;
+    ptrlen dat = { .ptr = buf, .len = (sizeof(buf) - 1) };
+
+    GetLocalTime(&t);
+
+    snprintf(buf, sizeof(buf), "[%d-%02d-%02d %02d:%02d:%02d.%03ld]", t.wYear, t.wMonth, t.wDay, t.wHour, t.wMinute, t.wSecond, t.wMilliseconds);
+
+    _logwrite(ctx, dat);
+}
+#else /* _WINDOWS */
+static void log_timestamp(LogContext *ctx)
+{
+    char buf[] = "[0000-00-00 00:00:00.000000]";
+    char *p = buf;
+    struct timespec ts;
+    struct tm tm;
+    ptrlen dat = { .ptr = buf, .len = (sizeof(buf) - 1) };
+
+    if (clock_gettime(CLOCK_REALTIME, &ts) || !localtime_r(&ts.tv_sec, &tm))
+        return;
+
+    p += strftime(p, sizeof(buf) - (p - buf), "[%F %T", &tm);
+    p += snprintf(p, sizeof(buf) - (p - buf), ".%06ld]", ts.tv_nsec / 1000);
+
+    _logwrite(ctx, dat);
+}
+#endif /* _WINDOWS */
+
+static void logwrite_with_linetstamp(LogContext *ctx, ptrlen data)
+{
+    static enum {
+        LINE_CONT,
+        LINE_ENDED_NF,
+        LINE_ENDED_CR,
+    } stat = LINE_ENDED_NF;
+    const char *buf = (const char *) data.ptr;
+    size_t n = data.len;
+    const char *end = buf;
+
+    while (n) {
+        if ((stat == LINE_ENDED_NF)
+                || (stat == LINE_ENDED_CR && *buf != '\n')) {
+            log_timestamp(ctx);
+            stat = LINE_CONT;
+        }
+
+        /* find the next end-of-line */
+        for (; end < (buf + n) && *end != '\n' && *end != '\r'; end++);
+
+        if (end < (buf + n)) {
+            if (*end == '\n')
+                stat = LINE_ENDED_NF;
+            else if (end < (buf + n - 1) && *(end + 1) == '\n') {
+                end++;
+                stat = LINE_ENDED_NF;
+            } else
+                stat = LINE_ENDED_CR;
+            end++;
+        }
+
+        data.ptr = buf;
+        data.len = end - buf;
+        _logwrite(ctx, data);
+        n -= (end - buf);
+        buf = end;
+    }
+}
+
+static void logwrite(LogContext *ctx, ptrlen data)
+{
+    if (conf_get_bool(ctx->conf, CONF_loglinetstamp))
+        logwrite_with_linetstamp(ctx, data);
+    else
+        _logwrite(ctx, data);
 }
 
 /*

@@ -707,6 +707,7 @@ void test_simple(void)
                         LGXF_OVR, 1, LGXF_APN, 0, LGXF_ASK, -1, -1);
     test_bool_simple(CONF_logflush, "LogFlush", true);
     test_bool_simple(CONF_logheader, "LogHeader", true);
+    test_bool_simple(CONF_loglinetstamp, "LogLineTstamp", true);
     test_bool_simple(CONF_logomitpass, "SSHLogOmitPasswords", true);
     test_bool_simple(CONF_logomitdata, "SSHLogOmitData", false);
     test_bool_simple(CONF_hide_mouseptr, "HideMousePtr", false);
